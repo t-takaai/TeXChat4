@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Hi <%= displayName %> !</p>
+    <div id="username" displayname='<%= displayName %>' />
+
+    </div>
+    <br>
+
+    <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+
+<script src="/socket.io/socket.io.js"></script>
+<%# <script type="text/javascript" src="date-utils.min.js"></script>%>
+<%# <script src="dist/xss-filters.min.js"></script>%>
+<script src="https://cdn.rawgit.com/yahoo/xss-filters/master/dist/xss-filters.js"></script>
+<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    extensions: ["tex2jax.js"],
+    jax: ["input/TeX", "output/HTML-CSS"],
+    tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+    displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+    processEscapes: true
+    },
+  "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+<script>
+
+  var socket = io();
+
+  socket.on('connect', function() {
+    socket.emit('msg update');
+  });
+
+  $('form').submit(function(){
+    socket.emit('msg send', $('#m').val());
+    $('#m').val('');
+    return false;
+  });
+
+  socket.on('msg push', function(msg){
+    name = document.getElementById('username').getAttribute('displayname');
+    date = new Date();
+    // formattedDate = date.toFormatted("YYYY/MM/DD HH:MI:SS");
+    // message = formattedDate + " " + name + " : " + xssFilters.inHTMLData(msg);
+    message = name + " : " + xssFilters.inHTMLData(msg);
+    $('#messages').append($('<li>').text(message));
+    MathJax.Hub.Queue(["Typeset",MathJax.Hub,"messages"]);
+  });
+
+  socket.on('msg open', function(msg) {
+    for (var i=0, size=msg.length; i<size; ++i) {
+      console.log(msg[i].message);
+    }
+    if(msg.length == 0) {
+      console.log('message is empty!');
+      return;
+    } else {
+      console.log('message is not empty!');
+      $('#messages').empty();
+      $.each(msg, function(key, value) {
+        $('#messages').append($('<li>' + value.name + " : " + value.message + '</li>'));
+      });
+    }
+  });
+
+  socket.on('db drop', function() {
+    $('#message').empty();
+  });
+
+</script>
+
+  </body>
+</html>
