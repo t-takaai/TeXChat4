@@ -71,6 +71,7 @@
       $('#messages').empty();
       $.each(msg, function(key, value) {
         $('#messages').append($('<li>' + value.name + " : " + value.message + '</li>'));
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub,"messages"]);
       });
     }
   });
